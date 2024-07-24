@@ -1,0 +1,33 @@
+/uwb_localization:
+  ros__parameters:
+    timer_frequency: 100.0
+    imu_update_ticks: 0
+    uwb_update_ticks: 20
+    pub_update_ticks: 20
+    two_d_mode: true
+    squared: true
+    cost: 1.0
+    obs_alpha_a: 5.0
+    obs_alpha_w: 5.0
+    obs_Ks:
+      - 0.95
+      - 0.0
+      - 0.0
+      - 0.95
+      - 0.0
+    discretization_integral_steps: 1000
+    frame_id: map
+    imu_topic_name: /rover/imu
+    uwb1_topic_name: /tag1/uwb_distances
+    uwb2_topic_name: /tag2/uwb_distances
+    pose_base_topic_name: /uwb_localization/base
+    pose_tag1_topic_name: /uwb_localization/tag1
+    pose_tag2_topic_name: /uwb_localization/tag2
+    obs_state_topic_name: /uwb_localization/state
+    pose_covariance:
+      - 0.01
+      - 0.01
+      - 0.0
+      - 0.0
+      - 0.0
+      - 0.01

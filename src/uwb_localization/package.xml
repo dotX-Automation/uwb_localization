@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uwb_localization</name>
+  <version>1.0.0</version>
+  <description>This package contains the node for the localization using UWB devices</description>
+  <maintainer email="info@dotxautomation.com">dotX Automation s.r.l.</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>builtin_interfaces</depend>ù
+  <depend>dua_app_management</depend>
+  <depend>dua_interfaces</depend>
+  <depend>dua_node</depend>
+  <depend>geometry_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>tf2</depend>
+  <depend>tf2_ros</depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

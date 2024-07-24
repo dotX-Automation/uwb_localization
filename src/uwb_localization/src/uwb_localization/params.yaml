@@ -1,0 +1,58 @@
+header_include_path: uwb_localization/uwb_localization.hpp
+namespace: uwb_localization
+node_class_name: UWBLocalizationNode
+
+params:
+  base_link:
+    type: string
+    default_value: base_link
+    description: "Agent link name."
+    constraints: "Cannot be changed"
+    read_only: true
+    var_name: base_link_
+
+  global_link:
+    type: string
+    default_value: map
+    description: "World link name."
+    constraints: "Cannot be changed"
+    read_only: true
+    var_name: global_link_
+
+  initial_pos:
+    type: double_array
+    default_value: [0.0, 0.0, 0.0]
+    min_value: -1000000000.0
+    max_value: 1000000000.0
+    step: 0.0
+    description: "Initial position estimation."
+    constraints: "Cannot be changed."
+    read_only: true
+    var_name: initial_pos_
+
+  pos_covariance:
+    type: double_array
+    default_value: [0.1, 0.1, 0.1]
+    min_value: 0.0
+    max_value: 1000000.0
+    step: 0.0
+    description: "Estimated position covariance values."
+    constraints: "Cannot be changed."
+    read_only: true
+    var_name: pos_covariance_
+
+  squared_cost:
+    type: bool
+    default_value: true
+    description: "Use squared cost function in optimization problem."
+    constraints: "Cannot be changed."
+    read_only: true
+    var_name: squared_cost_
+
+  two_d_mode:
+    type: bool
+    default_value: false
+    description: "Enable 2D mode."
+    constraints: "Cannot be changed."
+    read_only: true
+    var_name: two_d_mode_
