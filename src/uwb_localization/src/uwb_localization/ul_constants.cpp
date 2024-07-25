@@ -27,7 +27,7 @@
 namespace uwb_localization
 {
   /* Subscribers Topics */
-  const std::string UWBLocalizationNode::uwb_sub_topic_ = "~/tag";
+  const std::string UWBLocalizationNode::uwb_sub_topic_ = "/tag";
 
   /* Publishers Topics */
   const std::string UWBLocalizationNode::pose_pub_topic_ = "~/pose";
