@@ -53,6 +53,8 @@
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
 
+#include <Eigen/Core>
+#include <Eigen/Geometry>
 #include <uwb_ceres/uwb_ceres.hpp>
 
 using namespace dua_interfaces::msg;
@@ -76,6 +78,7 @@ private:
     std::vector<double> pos_covariance_;
     bool squared_cost_;
     bool two_d_mode_;
+    bool use_tag_estimate_;
     bool verbose_;
 
     /* Node initialization routines */

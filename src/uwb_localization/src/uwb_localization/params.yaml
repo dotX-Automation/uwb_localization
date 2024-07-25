@@ -57,6 +57,14 @@ params:
     read_only: true
     var_name: two_d_mode_
 
+  use_tag_estimate:
+    type: bool
+    default_value: true
+    description: "Use UWB tag internal position estimate."
+    constraints: "Cannot be changed."
+    read_only: true
+    var_name: use_tag_estimate_
+
   verbose:
     type: bool
     default_value: false

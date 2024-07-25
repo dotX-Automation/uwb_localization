@@ -3,13 +3,14 @@
     base_link: base_link
     global_link: map
     initial_pos:
-      - 0.0
+      - 1.8
       - 0.0 
-      - 0.0
+      - -0.3
     pos_covariance:
       - 0.1
       - 0.1 
       - 0.1
-    squared_cost: true
+    squared_cost: false
     two_d_mode: false
-    verbose: true
+    use_tag_estimate: false
+    verbose: false

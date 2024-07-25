@@ -59,93 +59,96 @@ void UWBLocalizationNode::uwb_clbk(const UWBTag::SharedPtr msg)
     return;
   }
 
-  tf2::Quaternion quat_glob_uwb(
+  Eigen::Quaterniond quat_glob_uwb(
+    tf_glob_uwb.transform.rotation.w,
     tf_glob_uwb.transform.rotation.x,
     tf_glob_uwb.transform.rotation.y,
-    tf_glob_uwb.transform.rotation.z,
-    tf_glob_uwb.transform.rotation.w);
-  tf2::Quaternion quat_uwb_base(
+    tf_glob_uwb.transform.rotation.z);
+  Eigen::Quaterniond quat_uwb_base(
+    tf_uwb_base.transform.rotation.w,
     tf_uwb_base.transform.rotation.x,
     tf_uwb_base.transform.rotation.y,
-    tf_uwb_base.transform.rotation.z,
-    tf_uwb_base.transform.rotation.w);
-  /*tf2::Quaternion quat_base_tag(
+    tf_uwb_base.transform.rotation.z);
+  /*Eigen::Quaterniond quat_base_tag(
+    tf_base_tag.transform.rotation.w,
     tf_base_tag.transform.rotation.x,
     tf_base_tag.transform.rotation.y,
-    tf_base_tag.transform.rotation.z,
-    tf_base_tag.transform.rotation.w);*/
+    tf_base_tag.transform.rotation.z);*/
 
-  tf2::Vector3 vect_glob_uwb(
+  Eigen::Vector3d vect_glob_uwb(
     tf_glob_uwb.transform.translation.x,
     tf_glob_uwb.transform.translation.y,
     tf_glob_uwb.transform.translation.z);
-  /* tf2::Vector3 vect_uwb_base(
+  /* Eigen::Vector3d vect_uwb_base(
     tf_uwb_base.transform.translation.x,
     tf_uwb_base.transform.translation.y,
     tf_uwb_base.transform.translation.z);*/
-  tf2::Vector3 vect_base_tag(
+  Eigen::Vector3d vect_base_tag(
     tf_base_tag.transform.translation.x,
     tf_base_tag.transform.translation.y,
     tf_base_tag.transform.translation.z);
 
-  tf2::Vector3 pBase_wrt_glob(
-    pos_[0],
-    pos_[1],
-    pos_[2]);
+  Eigen::Vector3d pBase_wrt_glob;
+  Eigen::Vector3d pBase_wrt_uwb;
+  Eigen::Vector3d pTag_wrt_uwb;
+  
+  if(use_tag_estimate_) {
+    pTag_wrt_uwb.x() = msg->tag_position.point.x;
+    pTag_wrt_uwb.y() = msg->tag_position.point.y;
+    pTag_wrt_uwb.z() = msg->tag_position.point.z;
+  } else  {
+    pBase_wrt_glob.x() = pos_[0];
+    pBase_wrt_glob.y() = pos_[1];
+    pBase_wrt_glob.z() = pos_[2];
 
-  tf2::Vector3 pBase_wrt_uwb = tf2::quatRotate(
-    quat_glob_uwb.inverse(),
-    pBase_wrt_glob - vect_glob_uwb);
+    pBase_wrt_uwb = quat_glob_uwb.inverse() * (pBase_wrt_glob - vect_glob_uwb);
+    pTag_wrt_uwb = pBase_wrt_uwb + quat_uwb_base * vect_base_tag;
 
-  tf2::Vector3 pTag_wrt_uwb = pBase_wrt_uwb + tf2::quatRotate(
-    quat_uwb_base,
-    vect_base_tag);
+    unsigned int count;
+    std::vector<double> distances;
+    std::vector<double> anchors_x;
+    std::vector<double> anchors_y;
+    std::vector<double> anchors_z;
 
-  unsigned int count;
-  std::vector<double> distances;
-  std::vector<double> anchors_x;
-  std::vector<double> anchors_y;
-  std::vector<double> anchors_z;
+    count = msg->n_anchors;
+    distances.reserve(count);
+    anchors_x.reserve(count);
+    anchors_y.reserve(count);
+    anchors_z.reserve(count); 
+    for (unsigned int i = 0; i < count; i++) {
+      distances[i] = msg->anchors[i].distance;
+      anchors_x[i] = msg->anchors[i].position.x;
+      anchors_y[i] = msg->anchors[i].position.y;
+      anchors_z[i] = msg->anchors[i].position.z;
+    }
 
-  count = msg->n_anchors;
-  distances.reserve(count);
-  anchors_x.reserve(count);
-  anchors_y.reserve(count);
-  anchors_z.reserve(count); 
-  for (unsigned int i = 0; i < count; i++) {
-    distances[i] = msg->anchors[i].distance;
-    anchors_x[i] = msg->anchors[i].position.x;
-    anchors_y[i] = msg->anchors[i].position.y;
-    anchors_z[i] = msg->anchors[i].position.z;
+    std::array<double, 3> pos0;
+    pos0[0] = pTag_wrt_uwb.x();
+    pos0[1] = pTag_wrt_uwb.y();
+    pos0[2] = pTag_wrt_uwb.z();
+
+    Function* function = new Function(
+      two_d_mode_,
+      squared_cost_,
+      count,
+      distances,
+      anchors_x,
+      anchors_y,
+      anchors_z);
+    Result result = solve(function, pos0);
+
+    pTag_wrt_uwb = Eigen::Vector3d(
+      result.position[0],
+      result.position[1],
+      result.position[2]);
+
+    if(verbose_) {
+      RCLCPP_INFO(this->get_logger(), result.summary.BriefReport().c_str());
+    }
   }
 
-  std::array<double, 3> pos0;
-  pos0[0] = pTag_wrt_uwb.x();
-  pos0[1] = pTag_wrt_uwb.y();
-  pos0[2] = pTag_wrt_uwb.z();
-
-  Function* function = new Function(
-    two_d_mode_,
-    squared_cost_,
-    count,
-    distances,
-    anchors_x,
-    anchors_y,
-    anchors_z);
-  Result result = solve(function, pos0);
-
-  pTag_wrt_uwb = tf2::Vector3(
-    result.position[0],
-    result.position[1],
-    result.position[2]);
-
-  pBase_wrt_uwb = pTag_wrt_uwb - tf2::quatRotate(
-    quat_uwb_base,
-    vect_base_tag);
-
-  pBase_wrt_glob = vect_glob_uwb + tf2::quatRotate(
-    quat_glob_uwb,
-    pBase_wrt_uwb);
+  pBase_wrt_uwb = pTag_wrt_uwb - quat_uwb_base * vect_base_tag;
+  pBase_wrt_glob = vect_glob_uwb + quat_glob_uwb * pBase_wrt_uwb;
 
   pos_[0] = pBase_wrt_glob.x();
   pos_[1] = pBase_wrt_glob.y();
@@ -155,7 +158,6 @@ void UWBLocalizationNode::uwb_clbk(const UWBTag::SharedPtr msg)
 
   if(verbose_) {
     RCLCPP_INFO(this->get_logger(), "Estimation: %0.3f %0.3f %0.3f", pos_[0], pos_[1], pos_[2]);
-    RCLCPP_INFO(this->get_logger(), result.summary.BriefReport().c_str());
   }
 }
 
