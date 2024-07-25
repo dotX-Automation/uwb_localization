@@ -2,10 +2,8 @@
  * UWB localization publishers routine.
  *
  * Giorgio Manca <giorgio.manca97@gmail.com>
- * Lorenzo Bianchi <lnz.bnc@gmail.com>
- * Intelligent Systems Lab <isl.torvergata@gmail.com>
  *
- * April 27, 2023
+ * July 24, 2024
  */
 
 /**

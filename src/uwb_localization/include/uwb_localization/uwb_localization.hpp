@@ -3,7 +3,7 @@
  *
  * Giorgio Manca <giorgio.manca97@gmail.com>
  *
- * April 27, 2023
+ * July 24, 2024
  */
 
 /**
@@ -57,6 +57,7 @@
 
 using namespace dua_interfaces::msg;
 using namespace geometry_msgs::msg;
+using namespace uwb_ceres;
 
 namespace uwb_localization
 {

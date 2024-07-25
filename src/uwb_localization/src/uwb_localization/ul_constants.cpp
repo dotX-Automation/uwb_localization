@@ -1,9 +1,9 @@
 /**
  * UWB localization constants definitions.
  *
- * Giorgio Manca <giorgio.manca.97@gmail.com>
+ * Giorgio Manca <giorgio.manca97@gmail.com>
  *
- * October 18, 2023
+ * July 24, 2024
  */
 
 /**

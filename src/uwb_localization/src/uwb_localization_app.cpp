@@ -36,7 +36,7 @@
 
 #include <uwb_localization/uwb_localization.hpp>
 
-using namespace UwbLocalization;
+using namespace uwb_localization;
 
 int main(int argc, char **argv)
 {
@@ -53,7 +53,7 @@ int main(int argc, char **argv)
   rclcpp::init(argc, argv);
 
   // Initialize ROS 2 node
-  auto sd_node = std::make_shared<UwbLocalizationNode>();
+  auto sd_node = std::make_shared<UWBLocalizationNode>();
 
   // Create and configure executor
   auto executor = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();

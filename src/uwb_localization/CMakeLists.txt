@@ -25,6 +25,7 @@ find_package(Ceres REQUIRED)
 find_package(dua_app_management REQUIRED)
 find_package(dua_interfaces REQUIRED)
 find_package(dua_node REQUIRED)
+find_package(dua_qos_cpp REQUIRED)
 find_package(Eigen3 3.4 REQUIRED NO_MODULE)
 find_package(geometry_msgs REQUIRED)
 find_package(params_manager REQUIRED)
@@ -42,8 +43,9 @@ generate_init_parameters(
 
 # Configure uwb_localization Node source files
 file(GLOB UWB_LOCALIZATION_SRCS
-RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
-"src/uwb_localization/*.cpp")
+  RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+  "src/uwb_localization/*.cpp"
+  "src/uwb_ceres/*.cpp")
 list(APPEND UWB_LOCALIZATION_SRCS init_parameters.cpp)
 
 add_library(uwb_localization SHARED ${UWB_LOCALIZATION_SRCS})
@@ -52,13 +54,14 @@ target_include_directories(uwb_localization PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
 target_link_libraries(uwb_localization
-  Ceres
+  Ceres::ceres
   Eigen3::Eigen
   Threads::Threads)
 ament_target_dependencies(uwb_localization
   dua_app_management
   dua_interfaces
   dua_node
+  dua_qos_cpp
   geometry_msgs
   params_manager
   rcl_interfaces

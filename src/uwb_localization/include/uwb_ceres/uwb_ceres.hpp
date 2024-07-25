@@ -2,10 +2,8 @@
  * UWB localization ceres utilities header.
  *
  * Giorgio Manca <giorgio.manca97@gmail.com>
- * Lorenzo Bianchi <lnz.bnc@gmail.com>
- * Intelligent Systems Lab <isl.torvergata@gmail.com>
  *
- * April 27, 2023
+ * July 24, 2024
  */
 
 /**
@@ -31,6 +29,8 @@ using ceres::Problem;
 using ceres::Solver;
 
 
+namespace uwb_ceres {
+
 class Function : public CostFunction {
 public:
   Function(
@@ -47,14 +47,6 @@ public:
   bool EvaluateLinear3d(double const* const* parameters, double* residuals, double** jacobians) const;
   bool EvaluateSquare2d(double const* const* parameters, double* residuals, double** jacobians) const;
   bool EvaluateSquare3d(double const* const* parameters, double* residuals, double** jacobians) const;
-
-  inline bool is2d() {
-      return two_d_mode_;
-  }
-
-  inline bool isSquared() {
-      return squared_;
-  }
 
 private:
   bool two_d_mode_;
@@ -74,5 +66,6 @@ struct Result {
   ceres::Solver::Summary summary;
 };
 
-
 Result solve(Function *function, std::array<double, 3> &init);
+
+}

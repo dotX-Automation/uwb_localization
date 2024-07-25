@@ -2,10 +2,8 @@
  * UWB localization ceres utilities.
  *
  * Giorgio Manca <giorgio.manca97@gmail.com>
- * Lorenzo Bianchi <lnz.bnc@gmail.com>
- * Intelligent Systems Lab <isl.torvergata@gmail.com>
  *
- * April 27, 2023
+ * July 24, 2024
  */
 
 /**
@@ -25,6 +23,8 @@
  */
 
 #include <uwb_ceres/uwb_ceres.hpp>
+
+namespace uwb_ceres {
 
 /**
  * @brief Ceres cost function constructor.
@@ -91,18 +91,19 @@ bool Function::Evaluate(double const* const* parameters, double* residuals, doub
  */
 bool Function::EvaluateLinear2d(double const* const* parameters, double* residuals, double** jacobians) const 
 {
-  double x = parameters[0][0], y = parameters[0][1];
-  double dx, dy;
+  double x = parameters[0][0], y = parameters[0][1], z = parameters[0][2];
+  double dx, dy, dz;
   double* nrms = new double[count_];
   int param_size = parameter_block_sizes()[0];
 
   for (unsigned int i = 0; i < count_; i++) {
     dx = (x - anchors_x_[i]);
     dy = (y - anchors_y_[i]);
-    nrms[i] = sqrt(dx*dx + dy*dy);
+    dz = (z - anchors_z_[i]);
+    nrms[i] = sqrt(dx*dx + dy*dy + dz*dz);
     residuals[i] = nrms[i] - distances_[i];
   }
-  
+
   bool res = true;
   if (jacobians != nullptr) {
     if (jacobians[0] != nullptr)
@@ -149,7 +150,6 @@ bool Function::EvaluateLinear3d(double const* const* parameters, double* residua
     residuals[i] = nrms[i] - distances_[i];
   }
 
-  
   bool res = true;
   if (jacobians != nullptr) {
     if (jacobians[0] != nullptr)
@@ -184,14 +184,15 @@ bool Function::EvaluateLinear3d(double const* const* parameters, double* residua
  */
 bool Function::EvaluateSquare2d(double const* const* parameters, double* residuals, double** jacobians) const 
 {
-  double x = parameters[0][0], y = parameters[0][1];
-  double dx, dy;
+  double x = parameters[0][0], y = parameters[0][1], z = parameters[0][2];
+  double dx, dy, dz;
   int param_size = parameter_block_sizes()[0];
 
   for (unsigned int i = 0; i < count_; i++) {
     dx = (x - anchors_x_[i]);
     dy = (y - anchors_y_[i]);
-    residuals[i] = dx*dx + dy*dy - distances_[i]*distances_[i];
+    dz = (z - anchors_z_[i]);
+    residuals[i] = dx*dx + dy*dy + dz*dz - distances_[i]*distances_[i];
   }
   
   if (jacobians != nullptr) {
@@ -252,22 +253,16 @@ bool Function::EvaluateSquare3d(double const* const* parameters, double* residua
 
 Result solve(Function *function, std::array<double, 3> &init)
 {
-  ceres::Problem problem;
-
   double pos[3];
-  if(function->is2d()) {
-    pos[0] = init[0];
-    pos[1] = init[1];
-  } else {
-    pos[0] = init[0];
-    pos[1] = init[1];
-    pos[2] = init[2];
-  }
+  pos[0] = init[0];
+  pos[1] = init[1];
+  pos[2] = init[2];
 
   std::vector<double*> parameters;
   parameters.reserve(1);
   parameters.push_back(pos);
 
+  ceres::Problem problem;
   problem.AddResidualBlock(function, nullptr, parameters);
 
   Solver::Options options;
@@ -278,16 +273,11 @@ Result solve(Function *function, std::array<double, 3> &init)
 
   Result result;
   Solve(options, &problem, &result.summary);
-
-  if(function->is2d()) {
-    result.position[0] = pos[0];
-    result.position[1] = pos[1];
-    result.position[2] = 0.0;
-  } else {
-    result.position[0] = pos[0];
-    result.position[1] = pos[1];
-    result.position[2] = pos[2];
-  }
+  result.position[0] = pos[0];
+  result.position[1] = pos[1];
+  result.position[2] = pos[2];
 
   return result;
+}
+
 }
