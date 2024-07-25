@@ -12,4 +12,4 @@
       - 0.1
     squared_cost: true
     two_d_mode: false
-    verbose: false
+    verbose: true

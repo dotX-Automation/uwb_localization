@@ -84,7 +84,7 @@ ament_target_dependencies(uwb_localization_app
   rclcpp)
 
 # uwb_localization app
-install(TARGETS uwb_localization
+install(TARGETS uwb_localization_app
   DESTINATION lib/${PROJECT_NAME})
 
 # Config files

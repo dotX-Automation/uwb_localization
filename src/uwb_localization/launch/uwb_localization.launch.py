@@ -64,7 +64,10 @@ def generate_launch_description():
         emulate_tty=True,
         output='both',
         log_cmd=True,
-        parameters=[cf])
+        parameters=[cf],
+        remappings=[
+            ('/tag', '/qorvo_mdek1001_driver/tag_data'),
+        ])
 
     ld.add_action(node)
 

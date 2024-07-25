@@ -35,33 +35,71 @@ namespace uwb_localization
 void UWBLocalizationNode::uwb_clbk(const UWBTag::SharedPtr msg)
 {
   rclcpp::Time stamp = this->get_clock()->now();
+  std::string uwb_link = msg->anchors[0].header.frame_id;
+  std::string tag_link = msg->header.frame_id;
 
-  TransformStamped tf_global_base;
-  TransformStamped tf_base_uwb;
+  TransformStamped tf_glob_uwb;
+  TransformStamped tf_uwb_base;
+  TransformStamped tf_base_tag;
   try {
-    tf_global_base = tf_buffer_->lookupTransform(
+    tf_glob_uwb = tf_buffer_->lookupTransform(
       global_link_,
+      uwb_link,
+      rclcpp::Time());
+    tf_uwb_base = tf_buffer_->lookupTransform(
+      uwb_link,
       base_link_,
       rclcpp::Time());
-    tf_base_uwb = tf_buffer_->lookupTransform(
+    tf_base_tag = tf_buffer_->lookupTransform(
       base_link_,
-      msg->header.frame_id,
+      tag_link,
       rclcpp::Time());
   } catch (const tf2::TransformException & e) {
     RCLCPP_WARN(this->get_logger(), "TF exception: %s", e.what());
     return;
   }
 
-  tf2::Vector3 traslation = tf2::quatRotate(
-    tf2::Quaternion(
-      tf_global_base.transform.rotation.x,
-      tf_global_base.transform.rotation.y,
-      tf_global_base.transform.rotation.z,
-      tf_global_base.transform.rotation.w),
-    tf2::Vector3(
-      tf_base_uwb.transform.translation.x,
-      tf_base_uwb.transform.translation.y,
-      tf_base_uwb.transform.translation.z));
+  tf2::Quaternion quat_glob_uwb(
+    tf_glob_uwb.transform.rotation.x,
+    tf_glob_uwb.transform.rotation.y,
+    tf_glob_uwb.transform.rotation.z,
+    tf_glob_uwb.transform.rotation.w);
+  tf2::Quaternion quat_uwb_base(
+    tf_uwb_base.transform.rotation.x,
+    tf_uwb_base.transform.rotation.y,
+    tf_uwb_base.transform.rotation.z,
+    tf_uwb_base.transform.rotation.w);
+  /*tf2::Quaternion quat_base_tag(
+    tf_base_tag.transform.rotation.x,
+    tf_base_tag.transform.rotation.y,
+    tf_base_tag.transform.rotation.z,
+    tf_base_tag.transform.rotation.w);*/
+
+  tf2::Vector3 vect_glob_uwb(
+    tf_glob_uwb.transform.translation.x,
+    tf_glob_uwb.transform.translation.y,
+    tf_glob_uwb.transform.translation.z);
+  /* tf2::Vector3 vect_uwb_base(
+    tf_uwb_base.transform.translation.x,
+    tf_uwb_base.transform.translation.y,
+    tf_uwb_base.transform.translation.z);*/
+  tf2::Vector3 vect_base_tag(
+    tf_base_tag.transform.translation.x,
+    tf_base_tag.transform.translation.y,
+    tf_base_tag.transform.translation.z);
+
+  tf2::Vector3 pBase_wrt_glob(
+    pos_[0],
+    pos_[1],
+    pos_[2]);
+
+  tf2::Vector3 pBase_wrt_uwb = tf2::quatRotate(
+    quat_glob_uwb.inverse(),
+    pBase_wrt_glob - vect_glob_uwb);
+
+  tf2::Vector3 pTag_wrt_uwb = pBase_wrt_uwb + tf2::quatRotate(
+    quat_uwb_base,
+    vect_base_tag);
 
   unsigned int count;
   std::vector<double> distances;
@@ -82,9 +120,9 @@ void UWBLocalizationNode::uwb_clbk(const UWBTag::SharedPtr msg)
   }
 
   std::array<double, 3> pos0;
-  pos0[0] = pos_[0] + traslation.x();
-  pos0[1] = pos_[1] + traslation.y();
-  pos0[2] = pos_[2] + traslation.z();
+  pos0[0] = pTag_wrt_uwb.x();
+  pos0[1] = pTag_wrt_uwb.y();
+  pos0[2] = pTag_wrt_uwb.z();
 
   Function* function = new Function(
     two_d_mode_,
@@ -96,15 +134,28 @@ void UWBLocalizationNode::uwb_clbk(const UWBTag::SharedPtr msg)
     anchors_z);
   Result result = solve(function, pos0);
 
-  pos_[0] = result.position[0] - traslation.x();
-  pos_[1] = result.position[1] - traslation.y();
-  pos_[2] = result.position[2] - traslation.z();
+  pTag_wrt_uwb = tf2::Vector3(
+    result.position[0],
+    result.position[1],
+    result.position[2]);
+
+  pBase_wrt_uwb = pTag_wrt_uwb - tf2::quatRotate(
+    quat_uwb_base,
+    vect_base_tag);
+
+  pBase_wrt_glob = vect_glob_uwb + tf2::quatRotate(
+    quat_glob_uwb,
+    pBase_wrt_uwb);
+
+  pos_[0] = pBase_wrt_glob.x();
+  pos_[1] = pBase_wrt_glob.y();
+  pos_[2] = pBase_wrt_glob.z();
 
   publish_pose(stamp);
 
   if(verbose_) {
     RCLCPP_INFO(this->get_logger(), "Estimation: %0.3f %0.3f %0.3f", pos_[0], pos_[1], pos_[2]);
-    std::cout << result.summary.BriefReport() << std::endl;
+    RCLCPP_INFO(this->get_logger(), result.summary.BriefReport().c_str());
   }
 }
 
