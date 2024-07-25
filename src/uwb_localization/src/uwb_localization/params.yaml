@@ -52,7 +52,15 @@ params:
   two_d_mode:
     type: bool
     default_value: false
-    description: "Enable 2D mode."
+    description: "Enable 2D mode. Optimization is solved with fixed z, at initial condition."
     constraints: "Cannot be changed."
     read_only: true
     var_name: two_d_mode_
+
+  verbose:
+    type: bool
+    default_value: false
+    description: "Print estimation statistics."
+    constraints: "Cannot be changed."
+    read_only: true
+    var_name: verbose_
