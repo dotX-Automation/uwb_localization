@@ -35,7 +35,7 @@ namespace uwb_localization
  * @throws RuntimeError
  */
 UWBLocalizationNode::UWBLocalizationNode(const rclcpp::NodeOptions &opts)
-    : dua_node::NodeBase("uwb_localization", opts)
+    : dua_node::NodeBase("uwb_localization", opts, true)
 {
   // Initialize callback groups
   init_cgroups();
