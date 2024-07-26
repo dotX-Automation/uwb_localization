@@ -54,7 +54,7 @@ target_include_directories(uwb_localization PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
 target_link_libraries(uwb_localization
-  Ceres::ceres
+  ceres
   Eigen3::Eigen
   Threads::Threads)
 ament_target_dependencies(uwb_localization
@@ -68,8 +68,7 @@ ament_target_dependencies(uwb_localization
   rclcpp
   std_msgs
   tf2
-  tf2_ros
-)
+  tf2_ros)
 
 # uwb_localization standalone application
 add_executable(uwb_localization_app
