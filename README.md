@@ -1,6 +1,12 @@
-# dua-template
+# uwb_localization
 
-GitHub template repositories for projects based on the Distributed Unified Architecture.
+ROS2 node to estimate a position using UWB devices.
+
+## Usage
+
+See the individual package READMEs for specific usage instructions.
+
+### DUA integration
 
 See [`dua-template.md`](dua-template.md) for more information.
 

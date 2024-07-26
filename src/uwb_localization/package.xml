@@ -3,7 +3,7 @@
 <package format="3">
   <name>uwb_localization</name>
   <version>1.0.0</version>
-  <description>This package contains the node for the localization using UWB devices</description>
+  <description>This package contains the node to estimate a position using UWB devices</description>
   <maintainer email="info@dotxautomation.com">dotX Automation s.r.l.</maintainer>
   <license>Apache-2.0</license>
 
