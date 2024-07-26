@@ -130,3 +130,6 @@ void UWBLocalizationNode::init_tf_listeners()
 
 
 } // namespace uwb_localization
+
+#include <rclcpp_components/register_node_macro.hpp>
+RCLCPP_COMPONENTS_REGISTER_NODE(uwb_localization::UWBLocalizationNode)

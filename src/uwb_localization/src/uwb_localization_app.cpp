@@ -23,53 +23,42 @@
  * limitations under the License.
  */
 
-#define MODULE_NAME "uwb_localization_app"
-
-#include <cstdio>
 #include <cstdlib>
-#include <iostream>
-
-#include <sys/types.h>
-#include <unistd.h>
+#include <csignal>
 
 #include <rclcpp/rclcpp.hpp>
 
+#include <ros2_app_manager/ros2_app_manager.hpp>
+#include <ros2_signal_handler/ros2_signal_handler.hpp>
+
 #include <uwb_localization/uwb_localization.hpp>
 
-using namespace uwb_localization;
+using namespace dua_app_management;
 
-int main(int argc, char **argv)
+int main(int argc, char ** argv)
 {
-  // Disable I/O buffering
-  if (setvbuf(stdout, NULL, _IONBF, 0))
-  {
-    RCLCPP_FATAL(
-        rclcpp::get_logger(MODULE_NAME),
-        "Failed to set I/O buffering");
-    exit(EXIT_FAILURE);
-  }
+  ROS2AppManager<rclcpp::executors::MultiThreadedExecutor,
+    uwb_localization::UWBLocalizationNode> app_manager(
+    argc,
+    argv,
+    "uwb_localization_app");
 
-  // Create and initialize ROS 2 context
-  rclcpp::init(argc, argv);
+  SignalHandler & sig_handler = SignalHandler::get_global_signal_handler();
+  sig_handler.init(
+    app_manager.get_context(),
+    "uwb_localization_app_signal_handler",
+    app_manager.get_executor());
+  sig_handler.install(SIGINT);
+  sig_handler.install(SIGTERM);
+  sig_handler.install(SIGQUIT);
+  sig_handler.ignore(SIGHUP);
+  sig_handler.ignore(SIGUSR1);
+  sig_handler.ignore(SIGUSR2);
 
-  // Initialize ROS 2 node
-  auto sd_node = std::make_shared<UWBLocalizationNode>();
+  app_manager.run();
 
-  // Create and configure executor
-  auto executor = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
-  executor->add_node(sd_node);
-
-  RCLCPP_WARN(
-      rclcpp::get_logger(MODULE_NAME),
-      "(%d) " MODULE_NAME " online",
-      getpid());
-
-  // Spin the executor
-  executor->spin();
-
-  // Destroy ROS 2 node and context
-  sd_node.reset();
-  rclcpp::shutdown();
+  app_manager.shutdown();
+  sig_handler.fini();
 
   exit(EXIT_SUCCESS);
 }
