@@ -67,14 +67,14 @@ Function::Function(
  */
 bool Function::Evaluate(double const* const* parameters, double* residuals, double** jacobians) const 
 {
-  if(squared_) {
-    if(two_d_mode_) {
+  if (squared_) {
+    if (two_d_mode_) {
       return EvaluateSquare2d(parameters, residuals, jacobians);
     } else {
       return EvaluateSquare3d(parameters, residuals, jacobians);
     }
   } else {
-    if(two_d_mode_) {
+    if (two_d_mode_) {
       return EvaluateLinear2d(parameters, residuals, jacobians);
     } else {
       return EvaluateLinear3d(parameters, residuals, jacobians);

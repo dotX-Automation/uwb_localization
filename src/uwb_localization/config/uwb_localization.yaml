@@ -3,9 +3,9 @@
     base_link: base_link
     global_link: map
     initial_pos:
-      - 1.8
-      - 0.0 
-      - -0.3
+      - 0.0
+      - 0.0
+      - 0.0
     pos_covariance:
       - 0.1
       - 0.1 
