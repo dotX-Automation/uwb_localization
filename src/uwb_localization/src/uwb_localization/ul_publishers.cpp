@@ -33,21 +33,85 @@ namespace uwb_localization
  * @param stamp Message timestamp.
  */
 void UWBLocalizationNode::publish_pose(const rclcpp::Time &stamp){
-    PoseWithCovarianceStamped msg;
+  PoseWithCovarianceStamped msg;
 
-    msg.header.frame_id = global_link_;
-    msg.header.stamp = stamp;
-    msg.pose.pose.position.x = pos_[0];
-    msg.pose.pose.position.y = pos_[1];
-    msg.pose.pose.position.z = pos_[2];
-    msg.pose.pose.orientation.w = 1.0;
-    msg.pose.pose.orientation.x = 0.0;
-    msg.pose.pose.orientation.y = 0.0;
-    msg.pose.pose.orientation.z = 0.0;
-    msg.pose.covariance = cov_;
+  msg.header.frame_id = global_link_;
+  msg.header.stamp = stamp;
+  msg.pose.pose.position.x = pos_[0];
+  msg.pose.pose.position.y = pos_[1];
+  msg.pose.pose.position.z = pos_[2];
+  msg.pose.pose.orientation.w = 1.0;
+  msg.pose.pose.orientation.x = 0.0;
+  msg.pose.pose.orientation.y = 0.0;
+  msg.pose.pose.orientation.z = 0.0;
+  msg.pose.covariance = cov_;
 
-    // Publish message
-    pose_pub_->publish(msg);
+  pose_pub_->publish(msg);
+}
+
+/**
+ * @brief Publish estimated pose.
+ *
+ * @param stamp Message timestamp.
+ * @param fun Optimization problem.
+ * @param res Optimization result.
+ */
+void UWBLocalizationNode::publish_visual(const rclcpp::Time &stamp, const Function &fun, const Result &res){
+  MarkerArray msg;
+  msg.markers.reserve(fun.measures.size() + 1);
+
+  Marker marker_del;
+  marker_del.header.frame_id = global_link_;
+  marker_del.header.stamp = stamp;
+  marker_del.action = Marker::DELETEALL;
+
+  Marker marker_pos;
+  marker_pos.header.frame_id = global_link_;
+  marker_pos.header.stamp = stamp;
+  marker_pos.action = Marker::ADD;
+  marker_pos.type = Marker::POINTS;
+  marker_pos.ns = "estimation";
+  marker_pos.id = 0;
+  marker_pos.pose.position.x = res.position.x();
+  marker_pos.pose.position.y = res.position.y();
+  marker_pos.pose.position.z = res.position.z();
+  marker_pos.pose.orientation.x = 0.0;
+  marker_pos.pose.orientation.y = 0.0;
+  marker_pos.pose.orientation.z = 0.0;
+  marker_pos.pose.orientation.w = 1.0;
+  marker_pos.scale.x = 0.1;
+  marker_pos.scale.y = 0.1;
+  marker_pos.scale.z = 0.1;
+  marker_pos.color.r = 1.0;
+  marker_pos.color.g = 1.0;
+  marker_pos.color.b = 1.0;
+  marker_pos.color.a = 1.0;
+
+  for(size_t i = 0; i < fun.measures.size(); i++) {
+    Marker marker = Marker();
+    marker.header.frame_id = global_link_;
+    marker.header.stamp = stamp;
+    marker.action = Marker::ADD;
+    marker.type = Marker::SPHERE;
+    marker.ns = "estimation";
+    marker.id = i+1;
+    marker.pose.position.x = fun.measures[i].anchor.x();
+    marker.pose.position.y = fun.measures[i].anchor.y();
+    marker.pose.position.z = fun.measures[i].anchor.z();
+    marker.pose.orientation.x = 0.0;
+    marker.pose.orientation.y = 0.0;
+    marker.pose.orientation.z = 0.0;
+    marker.pose.orientation.w = 1.0;
+    marker.scale.x = fun.measures[i].distance;
+    marker.scale.y = fun.measures[i].distance;
+    marker.scale.z = fun.measures[i].distance;
+    marker.color.r = 1.0;
+    marker.color.g = 1.0;
+    marker.color.b = 1.0;
+    marker.color.a = 0.2;
+  }
+
+  visual_pub_->publish(msg);
 }
 
 } // uwb_localization

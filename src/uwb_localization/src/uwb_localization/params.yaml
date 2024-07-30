@@ -72,3 +72,11 @@ params:
     constraints: "Cannot be changed."
     read_only: true
     var_name: verbose_
+  
+  visual_debug:
+    type: bool
+    default_value: false
+    description: "Publish markers to visualize estimation."
+    constraints: "Cannot be changed."
+    read_only: true
+    var_name: visual_debug_

@@ -38,24 +38,16 @@ namespace uwb_ceres {
 Function::Function(
   bool two_d_mode,
   bool squared,
-  unsigned int count, 
-  std::vector<double>& distances, 
-  std::vector<double>& anchors_x, 
-  std::vector<double>& anchors_y, 
-  std::vector<double>& anchors_z)
+  std::vector<Measure>& measures)
   :
-  two_d_mode_(two_d_mode),
-  squared_(squared),
-  count_(count),
-  distances_(distances),
-  anchors_x_(anchors_x),
-  anchors_y_(anchors_y),
-  anchors_z_(anchors_z)
+  two_d_mode(two_d_mode),
+  squared(squared),
+  measures(measures)
 {
   std::vector<int32_t> *block_sizes = mutable_parameter_block_sizes();
   block_sizes->reserve(1);
   block_sizes->push_back(two_d_mode ? 2 : 3);
-  set_num_residuals(count);
+  set_num_residuals(measures.size());
 }
 
 /**
@@ -67,14 +59,14 @@ Function::Function(
  */
 bool Function::Evaluate(double const* const* parameters, double* residuals, double** jacobians) const 
 {
-  if (squared_) {
-    if (two_d_mode_) {
+  if (squared) {
+    if (two_d_mode) {
       return EvaluateSquare2d(parameters, residuals, jacobians);
     } else {
       return EvaluateSquare3d(parameters, residuals, jacobians);
     }
   } else {
-    if (two_d_mode_) {
+    if (two_d_mode) {
       return EvaluateLinear2d(parameters, residuals, jacobians);
     } else {
       return EvaluateLinear3d(parameters, residuals, jacobians);
@@ -93,29 +85,29 @@ bool Function::EvaluateLinear2d(double const* const* parameters, double* residua
 {
   double x = parameters[0][0], y = parameters[0][1], z = parameters[0][2];
   double dx, dy, dz;
-  double* nrms = new double[count_];
+  double* nrms = new double[measures.size()];
   int param_size = parameter_block_sizes()[0];
 
-  for (unsigned int i = 0; i < count_; i++) {
-    dx = (x - anchors_x_[i]);
-    dy = (y - anchors_y_[i]);
-    dz = (z - anchors_z_[i]);
+  for (unsigned int i = 0; i < measures.size(); i++) {
+    dx = (x - measures[i].anchor.x());
+    dy = (y - measures[i].anchor.y());
+    dz = (z - measures[i].anchor.z());
     nrms[i] = sqrt(dx*dx + dy*dy + dz*dz);
-    residuals[i] = nrms[i] - distances_[i];
+    residuals[i] = nrms[i] - measures[i].distance;
   }
 
   bool res = true;
   if (jacobians != nullptr) {
     if (jacobians[0] != nullptr)
     {
-      for (unsigned int i = 0; i < param_size * count_; i++) {
+      for (unsigned int i = 0; i < param_size * measures.size(); i++) {
         jacobians[0][i] = 0.0;
       }
       
-      for (unsigned int i = 0; i < count_; i++) {
+      for (unsigned int i = 0; i < measures.size(); i++) {
         if(nrms[i] > 0.0) {
-          jacobians[0][i * param_size + 0] += (x - anchors_x_[i]) / nrms[i];
-          jacobians[0][i * param_size + 1] += (y - anchors_y_[i]) / nrms[i];
+          jacobians[0][i * param_size + 0] += (x - measures[i].anchor.x()) / nrms[i];
+          jacobians[0][i * param_size + 1] += (y - measures[i].anchor.y()) / nrms[i];
         } else {
           res = false;
         }
@@ -139,30 +131,30 @@ bool Function::EvaluateLinear3d(double const* const* parameters, double* residua
 {
   double x = parameters[0][0], y = parameters[0][1], z = parameters[0][2];
   double dx, dy, dz;
-  double* nrms = new double[count_];
+  double* nrms = new double[measures.size()];
   int param_size = parameter_block_sizes()[0];
 
-  for (unsigned int i = 0; i < count_; i++) {
-    dx = (x - anchors_x_[i]);
-    dy = (y - anchors_y_[i]);
-    dz = (z - anchors_z_[i]);
+  for (unsigned int i = 0; i < measures.size(); i++) {
+    dx = (x - measures[i].anchor.x());
+    dy = (y - measures[i].anchor.y());
+    dz = (z - measures[i].anchor.z());
     nrms[i] = sqrt(dx*dx + dy*dy + dz*dz);
-    residuals[i] = nrms[i] - distances_[i];
+    residuals[i] = nrms[i] - measures[i].distance;
   }
 
   bool res = true;
   if (jacobians != nullptr) {
     if (jacobians[0] != nullptr)
     {
-      for (unsigned int i = 0; i < param_size * count_; i++) {
+      for (unsigned int i = 0; i < param_size * measures.size(); i++) {
         jacobians[0][i] = 0.0;
       }
       
-      for (unsigned int i = 0; i < count_; i++) {
+      for (unsigned int i = 0; i < measures.size(); i++) {
         if(nrms[i] > 0.0) {
-          jacobians[0][i * param_size + 0] += (x - anchors_x_[i]) / nrms[i];
-          jacobians[0][i * param_size + 1] += (y - anchors_y_[i]) / nrms[i];
-          jacobians[0][i * param_size + 2] += (z - anchors_z_[i]) / nrms[i];
+          jacobians[0][i * param_size + 0] += (x - measures[i].anchor.x()) / nrms[i];
+          jacobians[0][i * param_size + 1] += (y - measures[i].anchor.y()) / nrms[i];
+          jacobians[0][i * param_size + 2] += (z - measures[i].anchor.z()) / nrms[i];
         } else {
           res = false;
         }
@@ -188,23 +180,23 @@ bool Function::EvaluateSquare2d(double const* const* parameters, double* residua
   double dx, dy, dz;
   int param_size = parameter_block_sizes()[0];
 
-  for (unsigned int i = 0; i < count_; i++) {
-    dx = (x - anchors_x_[i]);
-    dy = (y - anchors_y_[i]);
-    dz = (z - anchors_z_[i]);
-    residuals[i] = dx*dx + dy*dy + dz*dz - distances_[i]*distances_[i];
+  for (unsigned int i = 0; i < measures.size(); i++) {
+    dx = (x - measures[i].anchor.x());
+    dy = (y - measures[i].anchor.y());
+    dz = (z - measures[i].anchor.z());
+    residuals[i] = dx*dx + dy*dy + dz*dz - measures[i].distance*measures[i].distance;
   }
   
   if (jacobians != nullptr) {
     if (jacobians[0] != nullptr)
     {
-      for (unsigned int i = 0; i < param_size * count_; i++) {
+      for (unsigned int i = 0; i < param_size * measures.size(); i++) {
         jacobians[0][i] = 0.0;
       }
       
-      for (unsigned int i = 0; i < count_; i++) {
-        jacobians[0][i * param_size + 0] += 2 * (x - anchors_x_[i]);
-        jacobians[0][i * param_size + 1] += 2 * (y - anchors_y_[i]);
+      for (unsigned int i = 0; i < measures.size(); i++) {
+        jacobians[0][i * param_size + 0] += 2 * (x - measures[i].anchor.x());
+        jacobians[0][i * param_size + 1] += 2 * (y - measures[i].anchor.y());
       }
     }
   }
@@ -225,24 +217,24 @@ bool Function::EvaluateSquare3d(double const* const* parameters, double* residua
   double dx, dy, dz;
   int param_size = parameter_block_sizes()[0];
 
-  for (unsigned int i = 0; i < count_; i++) {
-    dx = (x - anchors_x_[i]);
-    dy = (y - anchors_y_[i]);
-    dz = (z - anchors_z_[i]);
-    residuals[i] = dx*dx + dy*dy + dz*dz - distances_[i]*distances_[i];
+  for (unsigned int i = 0; i < measures.size(); i++) {
+    dx = (x - measures[i].anchor.x());
+    dy = (y - measures[i].anchor.y());
+    dz = (z - measures[i].anchor.z());
+    residuals[i] = dx*dx + dy*dy + dz*dz - measures[i].distance*measures[i].distance;
   }
 
   if (jacobians != nullptr) {
     if (jacobians[0] != nullptr)
     {
-      for (unsigned int i = 0; i < param_size * count_; i++) {
+      for (unsigned int i = 0; i < param_size * measures.size(); i++) {
         jacobians[0][i] = 0.0;
       }
       
-      for (unsigned int i = 0; i < count_; i++) {
-        jacobians[0][i * param_size + 0] += 2 * (x - anchors_x_[i]);
-        jacobians[0][i * param_size + 1] += 2 * (y - anchors_y_[i]);
-        jacobians[0][i * param_size + 2] += 2 * (z - anchors_z_[i]);
+      for (unsigned int i = 0; i < measures.size(); i++) {
+        jacobians[0][i * param_size + 0] += 2 * (x - measures[i].anchor.x());
+        jacobians[0][i * param_size + 1] += 2 * (y - measures[i].anchor.y());
+        jacobians[0][i * param_size + 2] += 2 * (z - measures[i].anchor.z());
       }
     }
   }
@@ -251,19 +243,19 @@ bool Function::EvaluateSquare3d(double const* const* parameters, double* residua
 }
 
 
-Result solve(Function *function, std::array<double, 3> &init)
+Result solve(Function &function, Eigen::Vector3d &init)
 {
   double pos[3];
-  pos[0] = init[0];
-  pos[1] = init[1];
-  pos[2] = init[2];
+  pos[0] = init.x();
+  pos[1] = init.y();
+  pos[2] = init.z();
 
   std::vector<double*> parameters;
   parameters.reserve(1);
   parameters.push_back(pos);
 
   ceres::Problem problem;
-  problem.AddResidualBlock(function, nullptr, parameters);
+  problem.AddResidualBlock(&function, nullptr, parameters);
 
   Solver::Options options;
   options.max_num_iterations = 10000;
@@ -273,9 +265,9 @@ Result solve(Function *function, std::array<double, 3> &init)
 
   Result result;
   Solve(options, &problem, &result.summary);
-  result.position[0] = pos[0];
-  result.position[1] = pos[1];
-  result.position[2] = pos[2];
+  result.position.x() = pos[0];
+  result.position.y() = pos[1];
+  result.position.z() = pos[2];
 
   return result;
 }

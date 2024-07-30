@@ -31,5 +31,6 @@ namespace uwb_localization
 
   /* Publishers Topics */
   const std::string UWBLocalizationNode::pose_pub_topic_ = "~/pose";
+  const std::string UWBLocalizationNode::visual_pub_topic_ = "~/visual";
 
 } // namespace uwb_localization

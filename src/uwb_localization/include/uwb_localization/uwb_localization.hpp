@@ -48,6 +48,8 @@
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <geometry_msgs/msg/pose_with_covariance.hpp>
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
+#include <visualization_msgs/msg/marker.hpp>
+#include <visualization_msgs/msg/marker_array.hpp>
 
 #include <tf2/exceptions.h>
 #include <tf2_ros/buffer.h>
@@ -59,6 +61,8 @@
 
 using namespace dua_interfaces::msg;
 using namespace geometry_msgs::msg;
+using namespace visualization_msgs::msg;
+
 using namespace uwb_ceres;
 
 namespace uwb_localization
@@ -80,6 +84,7 @@ private:
     bool two_d_mode_;
     bool use_tag_estimate_;
     bool verbose_;
+    bool visual_debug_;
 
     /* Node initialization routines */
     void init_cgroups();
@@ -112,12 +117,15 @@ private:
 
     /* Publishers */
     rclcpp::Publisher<PoseWithCovarianceStamped>::SharedPtr pose_pub_;
+    rclcpp::Publisher<MarkerArray>::SharedPtr visual_pub_;
 
     /* Publishers Topics */
     static const std::string pose_pub_topic_;
+    static const std::string visual_pub_topic_;
 
     /* Publishers routines */
     void publish_pose(const rclcpp::Time &stamp);
+    void publish_visual(const rclcpp::Time &stamp, const Function &fun, const Result &res);
 };
 
 

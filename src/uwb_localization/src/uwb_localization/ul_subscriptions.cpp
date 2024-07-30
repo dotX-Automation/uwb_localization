@@ -105,43 +105,28 @@ void UWBLocalizationNode::uwb_clbk(const UWBTag::SharedPtr msg)
     pTag_wrt_uwb = pBase_wrt_uwb + quat_uwb_base * vect_base_tag;
 
     unsigned int count;
-    std::vector<double> distances;
-    std::vector<double> anchors_x;
-    std::vector<double> anchors_y;
-    std::vector<double> anchors_z;
+    std::vector<Measure> measures;
 
     count = msg->n_anchors;
-    distances.reserve(count);
-    anchors_x.reserve(count);
-    anchors_y.reserve(count);
-    anchors_z.reserve(count); 
+    measures.reserve(count);
     for (unsigned int i = 0; i < count; i++) {
-      distances[i] = msg->anchors[i].distance;
-      anchors_x[i] = msg->anchors[i].position.x;
-      anchors_y[i] = msg->anchors[i].position.y;
-      anchors_z[i] = msg->anchors[i].position.z;
+      measures[i].distance = msg->anchors[i].distance;
+      measures[i].anchor.x() = msg->anchors[i].position.x;
+      measures[i].anchor.y() = msg->anchors[i].position.y;
+      measures[i].anchor.z() = msg->anchors[i].position.z;
     }
 
-    std::array<double, 3> pos0;
-    pos0[0] = pTag_wrt_uwb.x();
-    pos0[1] = pTag_wrt_uwb.y();
-    pos0[2] = pTag_wrt_uwb.z();
-
-    Function* function = new Function(
+    Function function = Function(
       two_d_mode_,
       squared_cost_,
-      count,
-      distances,
-      anchors_x,
-      anchors_y,
-      anchors_z);
-    Result result = solve(function, pos0);
+      measures);
 
-    pTag_wrt_uwb = Eigen::Vector3d(
-      result.position[0],
-      result.position[1],
-      result.position[2]);
+    Result result = solve(function, pTag_wrt_uwb);
+    pTag_wrt_uwb = result.position;
 
+    if(visual_debug_) {
+      publish_visual(stamp, function, result);
+    }
     if(verbose_) {
       RCLCPP_INFO(this->get_logger(), result.summary.BriefReport().c_str());
     }

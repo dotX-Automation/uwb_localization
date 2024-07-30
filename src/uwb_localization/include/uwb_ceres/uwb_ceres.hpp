@@ -22,25 +22,38 @@
  * limitations under the License.
  */
 
-#include <ceres/ceres.h> // sudo ln -s /usr/local/include/eigen3/Eigen /usr/include/Eigen
+#include <ceres/ceres.h>
+#include <Eigen/Core>
 
 using ceres::CostFunction;
 using ceres::Problem;
 using ceres::Solver;
 
-
 namespace uwb_ceres {
+
+struct Point {
+  Point() {}
+
+  double x;
+  double y;
+  double z;
+};
+
+
+struct Measure {
+  Measure() {}
+
+  double distance;
+  Eigen::Vector3d anchor;
+};
+
 
 class Function : public CostFunction {
 public:
   Function(
     bool two_d_mode,
     bool squared,
-    unsigned int count,
-    std::vector<double>& distances, 
-    std::vector<double>& anchors_x, 
-    std::vector<double>& anchors_y, 
-    std::vector<double>& anchors_z); 
+    std::vector<Measure>& measures_); 
 
   bool Evaluate(double const* const* parameters, double* residuals, double** jacobians) const;
   bool EvaluateLinear2d(double const* const* parameters, double* residuals, double** jacobians) const;
@@ -48,24 +61,19 @@ public:
   bool EvaluateSquare2d(double const* const* parameters, double* residuals, double** jacobians) const;
   bool EvaluateSquare3d(double const* const* parameters, double* residuals, double** jacobians) const;
 
-private:
-  bool two_d_mode_;
-  bool squared_;
-  unsigned int count_;
-  std::vector<double>& distances_;
-  std::vector<double>& anchors_x_;
-  std::vector<double>& anchors_y_;
-  std::vector<double>& anchors_z_;
+  bool two_d_mode;
+  bool squared;
+  std::vector<Measure>& measures;
 };
 
 
 struct Result {
   Result() {}
 
-  std::array<double, 3> position;
+  Eigen::Vector3d position;
   ceres::Solver::Summary summary;
 };
 
-Result solve(Function *function, std::array<double, 3> &init);
+Result solve(Function &function, Eigen::Vector3d &init);
 
 }
