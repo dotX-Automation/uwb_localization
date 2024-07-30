@@ -243,7 +243,7 @@ bool Function::EvaluateSquare3d(double const* const* parameters, double* residua
 }
 
 
-Result solve(Function &function, Eigen::Vector3d &init)
+Result solve(Function *function, Eigen::Vector3d &init)
 {
   double pos[3];
   pos[0] = init.x();
@@ -255,7 +255,7 @@ Result solve(Function &function, Eigen::Vector3d &init)
   parameters.push_back(pos);
 
   ceres::Problem problem;
-  problem.AddResidualBlock(&function, nullptr, parameters);
+  problem.AddResidualBlock(function, nullptr, parameters);
 
   Solver::Options options;
   options.max_num_iterations = 10000;

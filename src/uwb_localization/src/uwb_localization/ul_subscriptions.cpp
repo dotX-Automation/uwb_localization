@@ -110,13 +110,15 @@ void UWBLocalizationNode::uwb_clbk(const UWBTag::SharedPtr msg)
     count = msg->n_anchors;
     measures.reserve(count);
     for (unsigned int i = 0; i < count; i++) {
-      measures[i].distance = msg->anchors[i].distance;
-      measures[i].anchor.x() = msg->anchors[i].position.x;
-      measures[i].anchor.y() = msg->anchors[i].position.y;
-      measures[i].anchor.z() = msg->anchors[i].position.z;
+      Measure measure = Measure();
+      measure.distance = msg->anchors[i].distance;
+      measure.anchor.x() = msg->anchors[i].position.x;
+      measure.anchor.y() = msg->anchors[i].position.y;
+      measure.anchor.z() = msg->anchors[i].position.z;
+      measures.push_back(measure);
     }
 
-    Function function = Function(
+    Function* function = new Function(
       two_d_mode_,
       squared_cost_,
       measures);
@@ -125,7 +127,7 @@ void UWBLocalizationNode::uwb_clbk(const UWBTag::SharedPtr msg)
     pTag_wrt_uwb = result.position;
 
     if(visual_debug_) {
-      publish_visual(stamp, function, result);
+      publish_visual(stamp, *function, result);
     }
     if(verbose_) {
       RCLCPP_INFO(this->get_logger(), result.summary.BriefReport().c_str());

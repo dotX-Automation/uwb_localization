@@ -74,6 +74,6 @@ struct Result {
   ceres::Solver::Summary summary;
 };
 
-Result solve(Function &function, Eigen::Vector3d &init);
+Result solve(Function *function, Eigen::Vector3d &init);
 
 }
