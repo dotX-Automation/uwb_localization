@@ -70,7 +70,7 @@ void UWBLocalizationNode::publish_visual(const rclcpp::Time &stamp, const Functi
   marker_pos.header.frame_id = global_link_;
   marker_pos.header.stamp = stamp;
   marker_pos.action = Marker::ADD;
-  marker_pos.type = Marker::POINTS;
+  marker_pos.type = Marker::SPHERE;
   marker_pos.ns = "estimation";
   marker_pos.id = 0;
   marker_pos.pose.position.x = res.position.x();
@@ -80,11 +80,11 @@ void UWBLocalizationNode::publish_visual(const rclcpp::Time &stamp, const Functi
   marker_pos.pose.orientation.y = 0.0;
   marker_pos.pose.orientation.z = 0.0;
   marker_pos.pose.orientation.w = 1.0;
-  marker_pos.scale.x = 0.1;
-  marker_pos.scale.y = 0.1;
-  marker_pos.scale.z = 0.1;
+  marker_pos.scale.x = pos_covariance_[0];
+  marker_pos.scale.y = pos_covariance_[1];
+  marker_pos.scale.z = pos_covariance_[2];
   marker_pos.color.r = 1.0;
-  marker_pos.color.g = 1.0;
+  marker_pos.color.g = 0.0;
   marker_pos.color.b = 1.0;
   marker_pos.color.a = 1.0;
   msg.markers.push_back(marker_pos);

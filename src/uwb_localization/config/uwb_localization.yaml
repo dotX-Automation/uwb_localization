@@ -1,7 +1,7 @@
 /uwb_localization:
   ros__parameters:
-    base_link: base_link
-    global_link: map
+    base_link: uwb_1_link
+    global_link: world
     initial_pos:
       - 0.0
       - 0.0
