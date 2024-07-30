@@ -117,6 +117,10 @@ void UWBLocalizationNode::init_publishers()
   pose_pub_ = this->create_publisher<PoseWithCovarianceStamped>(
     pose_pub_topic_,
     dua_qos::Reliable::get_datum_qos());
+
+  visual_pub_ = this->create_publisher<MarkerArray>(
+    visual_pub_topic_,
+    dua_qos::Reliable::get_datum_qos());
 }
 
 /**

@@ -14,3 +14,4 @@
     two_d_mode: false
     use_tag_estimate: false
     verbose: false
+    visual_debug: true
