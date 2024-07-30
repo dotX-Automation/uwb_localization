@@ -64,6 +64,7 @@ void UWBLocalizationNode::publish_visual(const rclcpp::Time &stamp, const Functi
   marker_del.header.frame_id = global_link_;
   marker_del.header.stamp = stamp;
   marker_del.action = Marker::DELETEALL;
+  msg.markers.push_back(marker_del);
 
   Marker marker_pos;
   marker_pos.header.frame_id = global_link_;
@@ -86,6 +87,7 @@ void UWBLocalizationNode::publish_visual(const rclcpp::Time &stamp, const Functi
   marker_pos.color.g = 1.0;
   marker_pos.color.b = 1.0;
   marker_pos.color.a = 1.0;
+  msg.markers.push_back(marker_pos);
 
   for(size_t i = 0; i < fun.measures.size(); i++) {
     Marker marker = Marker();
@@ -109,6 +111,7 @@ void UWBLocalizationNode::publish_visual(const rclcpp::Time &stamp, const Functi
     marker.color.g = 1.0;
     marker.color.b = 1.0;
     marker.color.a = 0.2;
+    msg.markers.push_back(marker);
   }
 
   visual_pub_->publish(msg);
